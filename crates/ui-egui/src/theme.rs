@@ -197,11 +197,11 @@ pub enum CjkPreference {
 }
 
 impl CjkPreference {
-    /// The preference for a UI language code (`zh-hans`, `zh-hant`, anything else).
+    /// The preference for a UI language code (`zh-hans`, `zh-hant`, `zh-tw`, anything else).
     pub fn for_language(code: &str) -> Self {
         match code {
             "zh-hans" => Self::SimplifiedChinese,
-            "zh-hant" => Self::TraditionalChinese,
+            "zh-hant" | "zh-tw" => Self::TraditionalChinese,
             _ => Self::Default,
         }
     }
@@ -356,6 +356,15 @@ fn font_definitions_for_platform(prefer_hans: bool, platform: FontPolicyPlatform
                 stack.push(name.clone());
             }
         }
+    }
+    // This fork bundles jf open huninn (a Taiwanese Traditional Chinese face, OFL-1.1) and leads
+    // the proportional family with it while the interface language is Traditional Chinese
+    // (Taiwan), so the interface renders in huninn on every platform — including builds without
+    // craft-fonts and the web, where no system CJK font may exist. (Upstream keeps fonts in
+    // craft-fonts only; see the fork note in ATTRIBUTION.md.)
+    if crate::i18n::current().code() == "zh-tw" {
+        add(&mut fonts, "jf-openhuninn", include_bytes!("../../../assets/fonts/jf-openhuninn-2.1.ttf"));
+        fonts.families.entry(FontFamily::Proportional).or_default().insert(0, "jf-openhuninn".to_owned());
     }
     let fallback: Vec<String> = fonts.families[&FontFamily::Proportional].clone();
     for (fam, primary) in [("medium", "Inter-Medium"), ("semibold", "Inter-SemiBold")] {
