@@ -1176,6 +1176,13 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                         if let Some(cmd) = widgets::community_links(ui) {
                             link_command = Some(cmd);
                         }
+                        // Fork-only Traditional Chinese edition credit (owner's standing rule,
+                        // 2026-10-16): shown in the About tab only when the interface language
+                        // is Traditional Chinese (Taiwan).
+                        if crate::i18n::current().code() == "zh-tw" {
+                            ui.add_space(8.0);
+                            ui.label(egui::RichText::new("©Copyright 2026 By 吳治綱 繁體中文化").strong());
+                        }
                     }
                 }
             }
