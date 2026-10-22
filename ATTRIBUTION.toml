@@ -44,6 +44,17 @@ usage = "Traditional Chinese UI strings, compiled in by crates/ui-egui/src/i18n/
 sha256 = "fc31e40877ce115cfb7033c57dd6acabcae3725b249364387e3fe23e04d94e5e"
 
 [[asset]]
+path = "crates/ui-egui/src/i18n/zh-tw.tsv"
+title = "Traditional Chinese (Taiwan) interface translation catalog"
+author = "Kavin Wu (this fork)"
+source = "Contributor-original: clean-room translations of PdfCraft's English UI labels; derived from the zh-hant catalog, completed with the entries it lacks and reviewed for Taiwan usage"
+licence = "MIT OR Apache-2.0"
+licence_file = "LICENSE-MIT"
+kind = "translation"
+usage = "Traditional Chinese (Taiwan) UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
+sha256 = "62a6ba24e6c42eb6cddbde055f2ba17d2f2d6e01321e012493a930e94c642afa"
+
+[[asset]]
 path = "crates/ui-egui/src/i18n/cs.tsv"
 title = "Czech interface translation catalog"
 author = "PdfCraft contributors"
@@ -2199,6 +2210,17 @@ licence_file = "assets/fonts/OFL-JetBrainsMono.txt"
 kind = "font"
 usage = "UI monospace font; demo PDF code"
 sha256 = "e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1"
+
+[[asset]]
+path = "assets/fonts/jf-openhuninn-2.1.ttf"
+title = "jf open huninn 2.1"
+author = "justfont inc."
+source = "https://github.com/justfont/open-huninn-font (release 2.1)"
+licence = "OFL-1.1"
+licence_file = "assets/fonts/jf-openhuninn-OFL.txt"
+kind = "font"
+usage = "Traditional Chinese (Taiwan) UI face, embedded by this fork in crates/ui-egui/src/theme.rs and used while the interface language is zh-tw. Upstream keeps fonts in craft-fonts only; this fork departs from that rule at its owner's direction, as its sibling forks do."
+sha256 = "9d5bf4932d31fe94c18cd8cfddc98bc1b14ce10f4e354c682179db290a99c825"
 
 [[asset]]
 path = "vendor/hayro-interpret/assets/FoxitDingbats.pfb"

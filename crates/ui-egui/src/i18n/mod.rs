@@ -147,17 +147,28 @@ fn plural_sl(n: u64) -> usize {
 }
 
 /// The registry. English first: it is the fallback and the source language.
-pub static LANGUAGES: [LangInfo; 23] = [
+pub static LANGUAGES: [LangInfo; 24] = [
     LangInfo { code: "en", name: "English", source: "", plural: plural_one_other, rtl: false, catalog: OnceLock::new() },
     LangInfo { code: "ja", name: "日本語", source: include_str!("ja.tsv"), plural: plural_none, rtl: false, catalog: OnceLock::new() },
     // Simplified Chinese; `zh`, `zh-CN`, `zh-SG` and `zh-Hans-*` locales resolve here (see `candidates`).
     LangInfo {
         code: "zh-hans", name: "简体中文", source: include_str!("zh-hans.tsv"), plural: plural_none, rtl: false, catalog: OnceLock::new()
     },
-    // Traditional Chinese in the vocabulary used in Taiwan; `zh-TW`, `zh-HK`, `zh-MO` and `zh-Hant-*`
-    // locales all resolve here (see `candidates`).
+    // Traditional Chinese in the vocabulary used in Taiwan. Locales name it first via `zh-tw`
+    // (see `candidates`); this entry stays selectable by its exact code.
     LangInfo {
         code: "zh-hant", name: "繁體中文", source: include_str!("zh-hant.tsv"), plural: plural_none, rtl: false, catalog: OnceLock::new()
+    },
+    // Traditional Chinese (Taiwan), this fork's catalog: zh-hant completed with the entries it
+    // lacks and reviewed for Taiwan usage. `zh-TW`, `zh-HK`, `zh-MO`, explicit `zh-Hant-*` and
+    // script-less Traditional regions resolve here (see `candidates`).
+    LangInfo {
+        code: "zh-tw",
+        name: "繁體中文（台灣）",
+        source: include_str!("zh-tw.tsv"),
+        plural: plural_none,
+        rtl: false,
+        catalog: OnceLock::new(),
     },
     LangInfo { code: "cs", name: "Čeština", source: include_str!("cs.tsv"), plural: plural_cs, rtl: false, catalog: OnceLock::new() },
     // Brazilian Portuguese; `pt`, `pt-BR` and `pt-PT` locales all resolve here (see `candidates`).
@@ -315,6 +326,16 @@ fn candidates(tag: &str) -> Vec<String> {
     if primary == "pt" && !out.iter().any(|c| c == "pt-br") {
         // The only Portuguese catalog is Brazilian; other regions use it rather than English.
         out.insert(out.len().saturating_sub(1), "pt-br".to_string());
+    }
+    if primary == "zh"
+        && !parts.contains(&"hans")
+        && (parts.contains(&"hant") || parts.iter().any(|p| matches!(*p, "tw" | "hk" | "mo")))
+        && !out.iter().any(|c| c == "zh-tw")
+    {
+        // Traditional Chinese resolves to this fork's Taiwan catalog before zh-hant: an explicit
+        // Hant script, or a Traditional region (TW/HK/MO) without a script.
+        let pos = out.iter().position(|c| c == "zh-hant").unwrap_or_else(|| out.len().saturating_sub(1));
+        out.insert(pos, "zh-tw".to_string());
     }
     out
 }
@@ -638,11 +659,11 @@ mod tests {
         assert_eq!(lang_from_tag("fr_FR"), Lang::from_code("fr"));
         assert_eq!(lang_from_tag("fr_CA.UTF-8"), Lang::from_code("fr"));
         assert_eq!(lang_from_tag("fr-BE"), Lang::from_code("fr"));
-        assert_eq!(lang_from_tag("zh-TW"), Lang::from_code("zh-hant"));
+        assert_eq!(lang_from_tag("zh-TW"), Lang::from_code("zh-tw"));
         assert_eq!(lang_from_tag("zh_CN.UTF-8"), Lang::from_code("zh-hans"));
         assert_eq!(lang_from_tag("zh"), Lang::from_code("zh-hans"));
-        assert_eq!(lang_from_tag("zh_HK.UTF-8"), Lang::from_code("zh-hant"));
-        assert_eq!(lang_from_tag("zh-Hant-MO"), Lang::from_code("zh-hant"));
+        assert_eq!(lang_from_tag("zh_HK.UTF-8"), Lang::from_code("zh-tw"));
+        assert_eq!(lang_from_tag("zh-Hant-MO"), Lang::from_code("zh-tw"));
         assert_eq!(lang_from_tag(""), None);
         assert_eq!(lang_from_tag("_"), None);
     }
@@ -654,7 +675,7 @@ mod tests {
         assert_eq!(candidates("pt"), ["pt-br", "pt"]);
         assert_eq!(candidates("zh_TW"), ["zh-tw", "zh-hant", "zh"]);
         assert_eq!(candidates("zh-CN"), ["zh-cn", "zh-hans", "zh"]);
-        assert_eq!(candidates("zh-Hant-HK"), ["zh-hant-hk", "zh-hant", "zh"]);
+        assert_eq!(candidates("zh-Hant-HK"), ["zh-hant-hk", "zh-tw", "zh-hant", "zh"]);
     }
 
     #[test]
@@ -670,7 +691,7 @@ mod tests {
     fn browser_language_list_is_followed_in_order() {
         assert_eq!(first_supported_tag(["it-IT", "en-US"]), Lang::from_code("it"));
         assert_eq!(first_supported_tag(["xx-YY", "ja", "fr-FR"]), Some(JA()));
-        assert_eq!(first_supported_tag(["zh-TW"]), Lang::from_code("zh-hant"));
+        assert_eq!(first_supported_tag(["zh-TW"]), Lang::from_code("zh-tw"));
         assert_eq!(first_supported_tag(["en-GB", "fr-FR"]), Some(Lang::EN));
         assert_eq!(first_supported_tag([" pt-PT "]), Lang::from_code("pt-br"));
         assert_eq!(first_supported_tag(["", "xx"]), None);
@@ -685,7 +706,7 @@ mod tests {
             assert_eq!(first_supported(&format!("{tag}\r\n")), Lang::from_code("zh-hans"));
         }
         for tag in ["zh-TW", "zh-HK", "zh-MO", "zh-Hant", "zh-Hant-HK"] {
-            assert_eq!(first_supported(&format!("{tag}\r\n")), Lang::from_code("zh-hant"));
+            assert_eq!(first_supported(&format!("{tag}\r\n")), Lang::from_code("zh-tw"));
         }
         assert_eq!(first_supported("en-US\r\n"), Some(Lang::EN));
         assert_eq!(first_supported("fr-FR\r\n"), Lang::from_code("fr"));
@@ -856,7 +877,7 @@ mod tests {
         let error = pdfcraft_engine::ocr::OcrError::NoModels.to_string();
         let notice = "Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.";
         assert!(include_str!("../ocr_ui.rs").contains(notice), "keep in step with ocr_ui.rs");
-        for code in ["bg", "cs", "de", "es", "fr", "hu", "ja", "ru", "te", "uk", "zh-hans", "zh-hant"] {
+        for code in ["bg", "cs", "de", "es", "fr", "hu", "ja", "ru", "te", "uk", "zh-hans", "zh-hant", "zh-tw"] {
             let lang = Lang::from_code(code).expect("registered");
             assert!(has(lang, notice) && has(lang, &error), "{code}");
         }
@@ -919,7 +940,7 @@ mod tests {
             labels.insert(label.to_string());
         }
         assert!(labels.len() > 20 && labels.contains("Comb of characters"), "the scan found the dialog's labels: {labels:?}");
-        for code in ["bg", "cs", "de", "es", "fr", "hu", "it", "ja", "pt-br", "ru", "te", "tr", "uk", "zh-hans", "zh-hant"] {
+        for code in ["bg", "cs", "de", "es", "fr", "hu", "it", "ja", "pt-br", "ru", "te", "tr", "uk", "zh-hans", "zh-hant", "zh-tw"] {
             let lang = Lang::from_code(code).expect("registered");
             let missing: Vec<_> = labels.iter().filter(|l| !has(lang, l)).collect();
             assert!(missing.is_empty(), "{code} lacks Shared Field Properties labels: {missing:#?}");
@@ -1813,6 +1834,25 @@ mod tests {
         assert_eq!(tr(zh, "Sort items"), "排序項目");
         assert_eq!(tr(zh, "Read Only"), "唯讀");
         assert_eq!(fmt(tr(zh, "{name} is read-only"), &[("name", "Field{n}")]), "Field{n} 為唯讀");
+    }
+
+    #[test]
+    fn taiwan_chinese_is_registered() {
+        let zh = Lang::from_code("zh-tw").expect("zh-tw registered");
+        assert_eq!(zh.name(), "繁體中文（台灣）");
+        assert_eq!(normalize_pref("zh-TW"), Some("zh-tw"));
+        assert_eq!(tr(zh, "File"), "檔案");
+        assert_eq!(tr(zh, "Print"), "列印");
+        // Entries zh-hant lacks, added by this fork.
+        assert_eq!(tr(zh, "Contributors"), "貢獻者");
+        assert_eq!(tr(zh, "Create PDF from images"), "從圖片建立 PDF");
+        assert_eq!(tr(zh, "Mark pages for redaction"), "標記頁面待遮蔽內容");
+        for command in pdfcraft_engine::commands::COMMANDS {
+            assert!(has(zh, command.label), "missing command: {}", command.label);
+        }
+        let literals = ui_literals();
+        let missing: Vec<_> = literals.iter().filter(|label| !has(zh, label)).collect();
+        assert!(missing.is_empty(), "untranslated zh-tw UI literals: {missing:#?}");
     }
 
     #[test]
