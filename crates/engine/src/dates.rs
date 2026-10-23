@@ -63,7 +63,7 @@ const CKB_DAYS: [&str; 7] = ["یەکشەممە", "دووشەممە", "سێشەم
 
 /// The languages month and weekday names can be written in (Preferences ▸ Date format ▸ Language):
 /// the interface languages, in the same order and with the same names.
-pub static DATE_LANGUAGES: [DateLanguage; 34] = [
+pub static DATE_LANGUAGES: [DateLanguage; 35] = [
     DateLanguage {
         code: "en",
         name: "English",
@@ -94,6 +94,15 @@ pub static DATE_LANGUAGES: [DateLanguage; 34] = [
     DateLanguage {
         code: "zh-hant",
         name: "繁體中文",
+        months: ZH_MONTHS,
+        months_with_day: None,
+        months_short: CJK_MONTHS,
+        days: ZH_DAYS,
+        days_short: ["週日", "週一", "週二", "週三", "週四", "週五", "週六"],
+    },
+    DateLanguage {
+        code: "zh-tw",
+        name: "繁體中文（台灣）",
         months: ZH_MONTHS,
         months_with_day: None,
         months_short: CJK_MONTHS,
