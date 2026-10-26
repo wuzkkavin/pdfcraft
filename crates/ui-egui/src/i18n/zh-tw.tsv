@@ -2507,3 +2507,17 @@ signature pad	Type	打字輸入
 	field names can't contain a period: {name}	欄位名稱不能包含句點：{name}
 	two cells would both be named {name}	兩個儲存格的名稱都會是 {name}
 	a field named {name} already exists	已有名為 {name} 的欄位
+	Applying a scale switches units to m / mm.	套用比例會將單位切換為 m / mm。
+	Attach a file…	附加檔案…
+	Collapse all tools	摺疊所有工具
+	Common scales	常用比例
+	Delete attachment	刪除附件
+	Don't show again	不再顯示
+	Enter a scale such as 1:50.	請輸入比例，例如 1:50。
+	Expand all tools	展開所有工具
+	In streams that use LZW encoding, use Flate instead	在使用 LZW 編碼的流中改用 Flate
+	No tools match your search.	沒有符合搜尋的工具。
+	Restore the last view (page, zoom and page display) when a document is opened again	再次開啟文件時還原上次的檢視（頁面、縮放與頁面顯示）
+	Scale	比例
+	Show a notice when a document is secured	文件已加密時顯示通知
+	Today	今天
